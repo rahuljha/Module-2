@@ -23,9 +23,7 @@ def index_to_position(index, strides):
     Returns:
         int : position in storage
     """
-
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    return sum([x[0]*x[1] for x in zip(index, strides)])
 
 
 def count(position, shape, out_index):
@@ -44,8 +42,14 @@ def count(position, shape, out_index):
       None : Fills in `out_index`.
 
     """
-    # TODO: Implement for Task 2.1.
-    raise NotImplementedError('Need to implement for Task 2.1')
+    strides = strides_from_shape(shape)
+    # we'll write it so that it works for both contiguous and non-contiguous strides
+    # sort by decreasing strides
+    sorted_strides = sorted(enumerate(strides), key=lambda x: x[1], reverse=True)
+    relative_position = position
+    for idx, stride_len in sorted_strides:
+        out_index[idx] = relative_position // stride_len
+        relative_position = relative_position % stride_len
 
 
 def broadcast_index(big_index, big_shape, shape, out_index):
@@ -191,8 +195,15 @@ class TensorData:
             range(len(self.shape))
         ), f"Must give a position to each dimension. Shape: {self.shape} Order: {order}"
 
-        # TODO: Implement for Task 2.1.
-        raise NotImplementedError('Need to implement for Task 2.1')
+        updated_strides = [0]*len(self.shape)
+        updated_shape = [0]*len(self.shape)
+        # Here is an example permutation:
+        # Given [2, 3, 0, 1]. This means assuming original positions as [0, 1, 2, 3], the strides and shapes should be moved.
+        # In this example stride for 2 should be moved to -> 0, 3 -> 1, 0 -> 2, and 1 -> 3. 
+        for tgt_idx, src_idx in enumerate(order):
+            updated_strides[tgt_idx] = self._strides[src_idx]
+            updated_shape[tgt_idx] = self._shape[src_idx]
+        return TensorData(self._storage, tuple(updated_shape), tuple(updated_strides))
 
     def to_string(self):
         s = ""
