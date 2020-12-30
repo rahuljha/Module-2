@@ -6,37 +6,46 @@ import math
 
 def mul(x, y):
     ":math:`f(x, y) = x * y`"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    return x*y
 
 
 def id(x):
     ":math:`f(x) = x`"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    return x
 
 
 def add(x, y):
     ":math:`f(x, y) = x + y`"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    return x+y
 
 
 def neg(x):
     ":math:`f(x) = -x`"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    return -1.0 * x
 
 
 def lt(x, y):
     ":math:`f(x) =` 1.0 if x is less than y else 0.0"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    if x < y:
+        return 1.0
+    else:
+        return 0.0
 
 
 def eq(x, y):
     ":math:`f(x) =` 1.0 if x is equal to y else 0.0"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    if x == y:
+        return 1.0
+    else:
+        return 0.0
 
 
 def max(x, y):
     ":math:`f(x) =` x if x is greater than y else y"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    if x > y:
+        return x
+    else:
+        return y
 
 
 def sigmoid(x):
@@ -51,13 +60,11 @@ def sigmoid(x):
 
     for stability.
 
-    Args:
-        x (float): input
-
-    Returns:
-        float : sigmoid value
     """
-    raise NotImplementedError('Need to include this file from past assignment.')
+    if x >= 0:
+        return 1.0/(1.0 + exp(-1*x))
+    else:
+        return exp(x)/(1.0+exp(x))
 
 
 def relu(x):
@@ -65,19 +72,19 @@ def relu(x):
     :math:`f(x) =` x if x is greater than 0, else 0
 
     (See `<https://en.wikipedia.org/wiki/Rectifier_(neural_networks)>`_ .)
-
-    Args:
-        x (float): input
-
-    Returns:
-        float : relu value
     """
-    raise NotImplementedError('Need to include this file from past assignment.')
+    if x > 0:
+        return x
+    else:
+        return 0.0
 
 
 def relu_back(x, y):
     ":math:`f(x) =` y if x is greater than 0 else 0"
-    raise NotImplementedError('Need to include this file from past assignment.')
+    if x > 0:
+        return y
+    else:
+        return 0
 
 
 EPS = 1e-6
@@ -120,13 +127,12 @@ def map(fn):
     See `<https://en.wikipedia.org/wiki/Map_(higher-order_function)>`_
 
     Args:
-        fn (one-arg function): Function from one value to one value.
+        fn (one-arg function): process one value
 
     Returns:
-        function : A function that takes a list, applies `fn` to each element, and returns a
-        new list
+        function : a function that takes a list and applies `fn` to each element
     """
-    raise NotImplementedError('Need to include this file from past assignment.')
+    return lambda x: [fn(i) for i in x]
 
 
 def negList(ls):
@@ -147,10 +153,10 @@ def zipWith(fn):
 
     Returns:
         function : takes two equally sized lists `ls1` and `ls2`, produce a new list by
-        applying fn(x, y) on each pair of elements.
+        applying fn(x, y) one each pair of elements.
 
     """
-    raise NotImplementedError('Need to include this file from past assignment.')
+    return lambda ls1, ls2: [fn(x, y) for x, y in zip(ls1, ls2)]
 
 
 def addLists(ls1, ls2):
@@ -173,15 +179,24 @@ def reduce(fn, start):
         function : function that takes a list `ls` of elements
         :math:`x_1 \ldots x_n` and computes the reduction :math:`fn(x_3, fn(x_2,
         fn(x_1, x_0)))`
-    """
-    raise NotImplementedError('Need to include this file from past assignment.')
 
+    """
+    def reduce_func(ls):
+        cum = start
+        for x in ls:
+            cum = fn(x, cum)
+        return cum
+    return reduce_func
 
 def sum(ls):
-    "Sum up a list using :func:`reduce` and :func:`add`."
-    raise NotImplementedError('Need to include this file from past assignment.')
+    """
+    Sum up a list using :func:`reduce` and :func:`add`.
+    """
+    return reduce(add, 0)(ls)
 
 
 def prod(ls):
-    "Product of a list using :func:`reduce` and :func:`mul`."
-    raise NotImplementedError('Need to include this file from past assignment.')
+    """
+    Product of a list using :func:`reduce` and :func:`mul`.
+    """
+    return reduce(mul, 1)(ls)

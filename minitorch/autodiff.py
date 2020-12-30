@@ -1,4 +1,6 @@
 import uuid
+import queue
+from collections import namedtuple, Sequence
 
 
 def wrap_tuple(x):
@@ -50,7 +52,7 @@ class Variable:
 
     ## IGNORE
     def __hash__(self):
-        return hash(self.name)
+        return hash(self._name)
 
     def _add_deriv(self, val):
         assert self.history.is_leaf(), "Only leaf variables can have derivatives."
@@ -139,7 +141,7 @@ class FunctionBase:
 
     @staticmethod
     def variable(raw, history):
-        raise NotImplementedError()
+        pass
 
     @classmethod
     def apply(cls, *vals):
@@ -169,6 +171,7 @@ class FunctionBase:
         Implement the derivative chain-rule.
 
         Args:
+            cls (:class:`FunctionBase`): The Function
             ctx (:class:`Context`) : The context from running forward
             inputs (list of args) : The args that were passed to :func:`FunctionBase.apply` (e.g. :math:`x, y`)
             d_output (number) : The `d_output` value in the chain rule.
@@ -178,8 +181,16 @@ class FunctionBase:
             (see `is_constant` to remove unneeded variables)
 
         """
-        raise NotImplementedError('Need to include this file from past assignment.')
-
+        derivs = cls.backward(ctx, d_output)
+        # If we just get back a single derivative, make it a list so we can do zip with inputs later
+        if not isinstance(derivs, Sequence):
+            derivs = [derivs]
+        ret_variables = []
+        for input_val, deriv in zip(inputs, derivs):
+            if is_constant(input_val):
+                continue
+            ret_variables.append(VariableWithDeriv(input_val, deriv))
+        return ret_variables
 
 def is_leaf(val):
     return isinstance(val, Variable) and val.history.is_leaf()
@@ -194,12 +205,22 @@ def backpropagate(final_variable_with_deriv):
     Runs a breadth-first search on the computation graph in order to
     backpropagate derivatives to the leaves.
 
-    See :doc:`backpropagate` for details on the algorithm.
+    See :doc:`backpropagate` for details on the algorithm
 
     Args:
-        final_variable_with_deriv (:class:`VariableWithDeriv`): The final variable
-                and its derivative that we want to propagate backward to the leaves.
-
-    No return. Should write to its results to the derivative values of each leaf.
+       final_variable_with_deriv (:class:`VariableWithDeriv`): The final variable
+           and its derivative that we want to propagate backward to the leaves.
     """
-    raise NotImplementedError('Need to include this file from past assignment.')
+    var_queue = queue.Queue()
+    var_queue.put(final_variable_with_deriv)
+    while not var_queue.empty():
+        cur_var_with_deriv = var_queue.get()
+        cur_var, deriv = cur_var_with_deriv.variable, cur_var_with_deriv.deriv
+        if is_leaf(cur_var):
+            cur_var._add_deriv(deriv)
+            continue
+        var_hist = cur_var.history
+        next_vars_with_derivs = var_hist.last_fn.chain_rule(var_hist.ctx, var_hist.inputs, deriv)
+        for var_with_deriv in next_vars_with_derivs:
+            if not is_constant(var_with_deriv.variable):
+                var_queue.put(var_with_deriv)
