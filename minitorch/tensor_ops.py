@@ -1,4 +1,5 @@
 import numpy as np
+from itertools import product
 from .tensor_data import (
     count,
     index_to_position,
@@ -29,8 +30,11 @@ def tensor_map(fn):
     """
 
     def _map(out, out_shape, out_strides, in_storage, in_shape, in_strides):
-        # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        for out_pos in range(len(out)):
+            out_idx = np.array([0]*len(out_shape))
+            count(out_pos, out_shape, out_idx)
+            in_pos = index_to_position(out_idx, in_strides)
+            out[out_pos] = fn(in_storage[in_pos])
 
     return _map
 
@@ -99,8 +103,13 @@ def tensor_zip(fn):
         b_shape,
         b_strides,
     ):
-        # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        for out_pos in range(len(out)):
+            out_idx = np.array([0]*len(out_shape))
+            count(out_pos, out_shape, out_idx)
+            a_pos = index_to_position(out_idx, a_strides)
+            b_pos = index_to_position(out_idx, b_strides)
+            a_val, b_val = a_storage[a_pos], b_storage[b_pos]
+            out[out_pos] = fn(a_val, b_val)
 
     return _zip
 
@@ -167,8 +176,22 @@ def tensor_reduce(fn):
         reduce_shape,
         reduce_size,
     ):
-        # TODO: Implement for Task 2.2.
-        raise NotImplementedError('Need to implement for Task 2.2')
+        for out_pos in range(len(out)):
+            out_idx = np.array([0]*len(out_shape))
+            count(out_pos, out_shape, out_idx)
+            # let's get all the indexes in the original tensor needed for current output positions reduction
+            idx_ranges = []
+            for seq_num, idx in enumerate(out_idx):
+                if reduce_shape[seq_num] == 1:
+                    idx_ranges.append([idx])
+                else:
+                    idx_ranges.append(list(range(reduce_shape[seq_num])))
+            idx_to_iterate = product(*idx_ranges)
+            out_val = out[out_pos]
+            for a_idx in idx_to_iterate:
+                a_pos = index_to_position(a_idx, a_strides)
+                out_val = fn(out_val, a_storage[a_pos])
+            out[out_pos] = out_val
 
     return _reduce
 
